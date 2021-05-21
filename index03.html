@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Project 3 Living Environment</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <link
+      href="https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.js"></script>
+
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+    <script
+      type="text/javascript"
+      src="https://lib.baomitu.com/echarts/4.9.0-rc.1/echarts.js"
+    ></script>
+    <script type="text/javascript" src="./static/geojson.js"></script>
+
+   <style>
+     
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #map {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+      }
+      .map-overlay {
+		    font: 10px/30px/50px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        color:rgb(255, 255, 255);
+		    position: absolute;
+		    width: 35%;
+		    top: 0;
+		    left: 0;
+		    padding: 10px;
+		}
+
+		.map-overlay .map-overlay-inner {
+		    background-color: rgba(210, 180, 140, 0.774);
+		    box-shadow:0 1px 2px rgb(58, 57, 57);
+		    border-radius: 3px;
+		    padding: 10px;
+		    margin-bottom: 10px;
+		}
+
+		.map-overlay h2 {
+		    line-height: 30px;
+		    display: block;
+		    margin: 0 0 10px;
+}
+
+      .left-panel {
+        position: absolute;
+        left: 0;
+        width: 320px;
+        height: 150px;
+        top:63%;
+        background: rgba(122, 119, 136, 0.938);
+        z-index: 2;
+        padding: 20px;
+        opacity: 1;
+        overflow: hidden;
+      }
+      
+      .left-panel h3{
+        margin: 0 0 10px;
+        color:rgb(255, 255, 255);
+      }
+
+      .left-panel .slider {
+        margin-top: 6px;
+        color:rgb(255, 255, 255);
+      }
+
+      .left-panel .slider .slider-bar {
+        display: flex;
+        align-items: center;
+        color:rgb(255, 255, 255);
+      }
+
+      .left-panel .slider .slider-bar span {
+        margin-left: 10px;
+      }
+
+      .left-panel .legend {
+        align-items: center;
+        margin-top: 18px;
+        color: rgb(255, 255, 255);
+      }
+
+      .left-panel .legend .legend-color {
+        width: 100%;
+        height: 16px;
+        background-image: linear-gradient(to right, #ffffb2, #bd0026);
+        margin-bottom: 3px;
+        text-align: center;
+        line-height: 15px;
+        font-size: 14px;
+      }
+
+      .left-panel .legend .legend-val {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .panel {
+        position: absolute;
+        right: 0;
+        width: 300px;
+        height: 100%;
+        top:0;
+        background: rgb(122, 119, 136);
+        z-index: 2;
+        padding: 20px;
+        opacity: 1;
+        overflow: hidden;
+      }
+
+      .panel #echartView-bar {
+        width: 300px;
+        height: 300px;
+      }
+      .panel #echartView-pie {
+        width: 300px;
+        height: 300px;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div class='map-overlay'>
+      <div class= 'map-overlay-inner'>
+        <h2 id= "PageName">Living Environment</h2>
+        Data source: <a href="https://data.london.gov.uk/dataset/household-waste-recycling-rates-borough">Department for Environment Food & Rural Affairs</a> &
+      <a href="https://data.london.gov.uk/dataset/leggi ">LEGGI </a>for 2000-2018
+      </div>
+      </div>
+
+
+
+    <div class="left-panel">
+      <h3>Waste Recycle Rate London</h3>
+      <div class="slider">
+        Drag slider to explore different years
+        <div class="slider-bar">
+          <input
+            style="width: 260px"
+            id="slider"
+            type="range"
+            min="2000"
+            max="2018"
+            step="1"
+            value="2000"
+            list="tickmarks"
+          />
+          <span class="slider-value">2000</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div>Waste Recycle Rate % 
+        </div>
+        <div class="legend-color">From less to more</div>
+        <div class="legend-val">
+          <span class="legendT1">0</span>
+          <span class="legendT2">60</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div id="echartView-bar"></div>
+      <div id="echartView-pie"></div>
+      </div>
+
+
+    <script>
+
+      const PeiValMapping = {
+        2000: [0.57, 0.02, 0.41],
+        2001: [0.57, 0.02, 0.41],
+        2002: [0.57, 0.02, 0.41],
+        2003: [0.57, 0.02, 0.41],
+        2004: [0.57, 0.02, 0.41],
+        2005: [0.57, 0.02, 0.41],
+        2006: [0.57, 0.02, 0.41],
+        2007: [0.57, 0.02, 0.41],
+        2008: [0.57, 0.02, 0.41],
+        2009: [0.57, 0.02, 0.41],
+        2010: [0.57, 0.02, 0.41],
+        2011: [0.57, 0.02, 0.41],
+        2012: [0.57, 0.02, 0.41],
+        2013: [0.57, 0.02, 0.41],
+        2014: [0.57, 0.02, 0.41],
+        2015: [0.57, 0.02, 0.41],
+        2016: [0.57, 0.02, 0.41],
+        2017: [0.57, 0.02, 0.41],
+        2018: [0.57, 0.02, 0.41],
+      };
+
+      const App = {
+        init: function () {
+          this.year = 2000;
+          this.renderBarChart();
+          this.renderPieChart();
+          this.initMap();
+          this.addEvents();
+        },
+
+        initMap: function () {
+          mapboxgl.accessToken =
+            "pk.eyJ1Ijoicnhob25nIiwiYSI6ImNrbHVpYWV5NDA0bW4ycHFsMGk1ZXRrYzMifQ.RAm93tOTlZ_hipqRJGPJ9g";
+          this.map = new mapboxgl.Map({
+            container: "map",
+            style: "mapbox://styles/mapbox/dark-v10",
+            center: [-0.070932, 51.50345],
+            zoom: 9.4,
+            pitch: 0,
+          });
+
+          this.map.on("load", () => {
+            this.map.addSource("London", {
+              type: "geojson",
+              data: data,
+            });
+            this.map.addLayer({
+              id: `year${this.year}`,
+              type: "fill",
+              source: "London",
+              layout: {},
+              paint: {
+                "fill-color": {
+                  property: `year${this.year}`,
+                  stops: [
+                    [10, "#ffffb2"],
+                    [20, "#fed976"],
+                    [30, "#feb24c"],
+                    [40, "#fd8d3c"],
+                    [50, "#f03b20"],
+                    [60, "#bd0026"],
+                  ],
+                },
+              },
+            });
+
+            this.map.addLayer({
+              id: "districtName",
+              type: "symbol",
+              source: "London",
+              layout: {
+                "text-field": ["get", "Area"],
+                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                "text-offset": [0, 1.25],
+                "text-anchor": "left",
+                "text-size": 13,
+              },
+              paint: {
+                "text-color": "#555555",
+              },
+            });
+            this.map.on("mousemove", `year${this.year}`, (e) => {
+              if (this.popup) {
+                this.popup.remove();
+              }
+              const val = e.features[0].properties[Object.keys(e.features[0].properties).find((o) => o === `year${this.year}`)];
+              const txtHtml = `
+                <div style="font-size:14px; padding: 0 5px">
+                  <div>Borough: ${e.features[0].properties.Area}</div>
+                  <div>Waste Recycle Rate: ${val} % </div>
+                </div>`;
+              this.popup = new mapboxgl.Popup({ closeButton: false });
+              this.popup.setLngLat(e.lngLat).setHTML(txtHtml).addTo(this.map);
+            });
+            this.map.on("mouseleave", `year${this.year}`, (e) => {
+              if (this.popup) {
+                this.popup.remove();
+              }
+            });
+          });
+        },
+        removeLayer: function () {
+          if (this.map.getLayer(`year${this.year}`)) {
+            this.map.removeLayer(`year${this.year}`);
+          }
+          if (this.map.getLayer("districtName")) {
+            this.map.removeLayer("districtName");
+          }
+        },
+        addMapLayer: function () {
+          this.map.addLayer({
+            id: `year${this.year}`,
+            type: "fill",
+            source: "London",
+            layout: {},
+            paint: {
+              "fill-color": {
+                property: `year${this.year}`,
+                stops: [
+                [10, "#ffffb2"],
+                    [20, "#fed976"],
+                    [30, "#feb24c"],
+                    [40, "#fd8d3c"],
+                    [50, "#f03b20"],
+                    [60, "#bd0026"],
+                ],
+              },
+            },
+          });
+          this.map.addLayer({
+            id: "districtName",
+            type: "symbol",
+            source: "London",
+            layout: {
+              "text-field": ["get", "Area"],
+              "text-offset": [0, 1.25],
+              "text-anchor": "left",
+              "text-size": 15,
+            },
+            paint: {
+              "text-color": "#000",
+            },
+          });
+        },
+
+        renderBarChart: function () {
+          this.myChart = echarts.init(document.getElementById("echartView-bar"),'dark');
+          const option = {
+            backgroundColor: '#7A7788',
+
+            title: {
+              text: "Total CO2 Emissions",
+              x: "center",
+              textStyle: {
+                color: "#FFFFFF",
+                fontSize: "16",
+              },
+            },
+            tooltip: {
+              show: true,
+              trigger: "axis",
+              formatter(params) {
+                return `<div>${params[0].name}: ${params[0].value} kt</div>`;
+              },
+            },
+            grid: {
+              top: "15%",
+              left: "13%",
+              right: "14%",
+            },
+            xAxis: {
+              type: "category",
+              name: "year",
+              data: [
+                2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
+                2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018,
+              ],
+            },
+            yAxis: {
+              type: "value",
+              name: "kt",
+            },
+            series: [
+              {
+                type: "bar",
+                data: [
+                  5095, 4983, 5025, 5066, 4835, 4836, 4969, 4863, 4957, 4549,
+                  4569, 4147, 4521, 4428, 4140, 3737, 3473, 3356, 3221,
+                ],
+                itemStyle: {
+                  normal: {
+                    barBorderRadius: 20,
+                    color: (param) => {
+                      if (param.name === String(this.year)) {
+                        return "#f03b20";
+                      }
+                      return "#F5DEB3";
+                    },
+                  },
+                },
+              },
+            ],
+          };
+          this.myChart.setOption(option);
+        },
+
+
+        renderPieChart: function () {
+          this.myChart = echarts.init(document.getElementById("echartView-pie"),'dark');
+          const option = {
+            backgroundColor: "#7A7788",
+
+            title: {
+              text: "Waste Sector Emission Components",
+              left: "center",
+              textStyle: {
+                color: "#FFFFFF",
+                fontSize: "16",
+              },
+            },
+            tooltip: {
+              trigger: "item",
+              confine: true,
+            },
+            
+            legend: {
+              orient: "horizontal",
+              bottom: "0%",
+              left: "center",
+            },
+            series: [
+              {
+                name: "Emission Contributions",
+                type: "pie",
+                color:['#EECDB1','#E66515', '#EF9A61'],
+                radius: "50%",
+                data: [
+                  {
+                    value: PeiValMapping[this.year][0],
+                    name: "Solid waste disposal",
+                  },
+                  {
+                    value: PeiValMapping[this.year][1],
+                    name: "Biological treatment of waste",
+                  },
+                  {
+                    value: PeiValMapping[this.year][2],
+                    name: "Wastewater treatment and discharge",
+                  },
+                ],
+                emphasis: {
+                  itemStyle: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: "rgba(0, 0, 0, 0.5)",
+                  },
+                },
+              },
+            ],
+          };
+          this.myChart.setOption(option);
+        },
+
+
+        addEvents: function () {
+          document.getElementById("slider").addEventListener("input", (e) => {
+            $(".slider-value").html(e.target.value);
+            this.year = Number(e.target.value);
+            this.removeLayer();
+            this.addMapLayer();
+            this.renderBarChart();
+            this.renderPieChart();
+            if (this.popup) {
+              this.popup.remove();
+            }
+          });
+        },
+      };
+      App.init();
+    </script>
+  </body>
+</html>
