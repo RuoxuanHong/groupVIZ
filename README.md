@@ -5,5 +5,5 @@ Style to dark
 
 5.26 Update:
 - Unit kt into Mt 
-- CO2 to CO2
+- CO2 to CO2e
 
